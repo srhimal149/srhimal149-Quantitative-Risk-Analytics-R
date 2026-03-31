@@ -1,81 +1,93 @@
-# Quantitative Risk Analytics — R & Python
+# Quantitative Risk Analytics — R
 
-![Python](https://img.shields.io/badge/Python-3.8%2B-blue) ![R](https://img.shields.io/badge/R-ggplot2-276DC3) ![Jupyter](https://img.shields.io/badge/Jupyter-Notebook-orange) ![License](https://img.shields.io/badge/License-MIT-green)
+![R](https://img.shields.io/badge/R-IRkernel-276DC3) ![Jupyter](https://img.shields.io/badge/Jupyter-Notebook-orange) ![License](https://img.shields.io/badge/License-MIT-green)
 
 ## Overview
 
-A comprehensive quantitative risk analytics toolkit implementing core financial risk models: CAPM regression for systematic risk decomposition, parametric Value-at-Risk (VaR) at multiple confidence levels, and Conditional Value-at-Risk (CVaR) computation. Automated reporting is produced with professional-grade ggplot2 visualisations.
+A quantitative risk analytics project implemented entirely in **R** (via IRkernel in Jupyter). It applies CAPM regression, parametric and historical VaR, and CVaR to **ASC.L** (ASOS) and **AV.L** (Aviva) benchmarked against the **FTSE 100**, with automated ggplot2 visualisations throughout.
 
-## Key Features
+Data is sourced via `quantmod` from Yahoo Finance (Jul 2024 – May 2025, ~259 trading days).
 
-- **CAPM Regression** — Estimates alpha and beta for systematic vs idiosyncratic risk decomposition
-- **Parametric VaR (95% and 99%)** — Gaussian assumption-based daily loss thresholds
-- **CVaR / Expected Shortfall** — Captures tail risk beyond VaR
-- **Automated ggplot2 Visualisations** — Return distributions, regression plots, and risk dashboards
-- **Statistical Reporting** — Summary statistics and model outputs ready for presentation
+---
 
-## Methodology
+## What's Inside
 
-### 1. CAPM Regression
-The Capital Asset Pricing Model is estimated via OLS regression of asset excess returns against market excess returns (FTSE 100 / S&P 500), yielding alpha (abnormal return) and beta (market sensitivity).
+### Section 1: Setup & Library Imports
+Installs and loads: `quantmod`, `PerformanceAnalytics`, `ggplot2`, `tidyverse`, `quadprog`
 
-### 2. Parametric VaR
-Assuming normally distributed returns, VaR is calculated at 95% and 99% confidence levels:
+### Section 2: Data Download
+Downloads adjusted close prices for **ASC.L** (ASOS) and **AV.L** (Aviva) plus **FTSE** benchmark using `getSymbols()` from `quantmod`.
 
-```
-VaR = μ - z * σ
-```
+### Section 3: Return & Excess Return Calculation
+- Computes daily returns using `mutate()` with lagged prices
+- - Calculates excess returns using `rf_annual = 0.045` (4.5% risk-free rate)
+  - - Produces a clean tibble with 7 columns (date, raw returns, excess returns) × 259 rows
+   
+    - ### Section 4: CAPM Model Implementation
+    - Full CAPM theory markdown with formula:
+    - ```
+      E(Ri) = Rf + βi(E(Rm) - Rf)
+      Ri - Rf = αi + βi(Rm - Rf) + εi
+      ```
+      OLS regression via `lm()` for each stock:
+      - `beta_asc = coef(lm(ASC_excess ~ Market_excess))[2]`
+      - - `beta_av = coef(lm(AV_excess ~ Market_excess))[2]`
+        - - Computes CAPM-implied expected returns for ASC and AV
+         
+          - ### Section 5: Parametric VaR (95% & 99%)
+          - Uses the Gaussian assumption:
+          - ```
+            VaR = μ - z * σ
+            ```
+            Computed for both stocks at 95% and 99% confidence.
 
-Where z is the z-score corresponding to the chosen confidence level.
+            ### Section 6: CVaR / Expected Shortfall
+            Computes the mean of returns below the VaR threshold for each confidence level.
 
-### 3. CVaR (Expected Shortfall)
-CVaR is computed as the expected loss conditional on losses exceeding the VaR threshold, providing a more conservative and coherent risk measure.
+            ### Section 7: ggplot2 Visualisations
+            - Return distribution histograms with VaR/CVaR overlaid
+            - - CAPM regression scatter plots
+              - - Correlation plots
+               
+                - ---
 
-### 4. Visualisations
-All outputs are rendered using ggplot2 (via rpy2 or R kernel), producing publication-quality charts including return distributions with VaR/CVaR overlays and regression scatter plots.
+                ## Technologies Used
 
-## Technologies Used
+                | Tool | Purpose |
+                |------|---------|
+                | R (IRkernel) | Core language — pure R notebook |
+                | quantmod | Yahoo Finance data download |
+                | ggplot2 | Professional visualisations |
+                | tidyverse (dplyr, tibble) | Data wrangling |
+                | PerformanceAnalytics | Risk metric utilities |
+                | Jupyter Notebook | Interactive execution via IRkernel |
 
-| Tool | Purpose |
-|------|---------|
-| Python 3.8+ | Core computational language |
-| R / rpy2 | Statistical modelling and visualisation |
-| ggplot2 | Professional chart generation |
-| NumPy / Pandas | Data manipulation |
-| SciPy | Statistical distributions |
-| yfinance | Market data retrieval |
-| Jupyter Notebook | Interactive analysis environment |
-
-## Project Structure
-
-```
-├── Quantitative_Risk_Analytics.ipynb   # Main analysis notebook
-└── README.md
-```
-
-## Getting Started
-
-```bash
-# Clone the repository
-git clone https://github.com/srhimal149/srhimal149-Quantitative-Risk-Analytics-R.git
-cd srhimal149-Quantitative-Risk-Analytics-R
-
-# Install Python dependencies
-pip install numpy pandas scipy matplotlib yfinance jupyter rpy2
-
-# Ensure R is installed with ggplot2
-Rscript -e "install.packages('ggplot2')"
-
-# Launch Jupyter
-jupyter notebook
-```
-
-## Author
-
-**Md Saifur Rahman Himal**
-MSc FinTech (Distinction Candidate) | Quantitative Finance & Risk Analytics
-[LinkedIn](https://www.linkedin.com/in/md-saifur-rahman-himal-70a0941ba) | [GitHub](https://github.com/srhimal149)
-
-## License
-
-MIT License — feel free to use and adapt with attribution.
+                > **Note:** This notebook runs R natively via IRkernel, not Python with rpy2. You need R and the IRkernel installed to execute it.
+                >
+                > ## Getting Started
+                >
+                > ```r
+                > # In R, install required packages
+                > install.packages(c("quantmod", "PerformanceAnalytics", "ggplot2", "tidyverse"))
+                >
+                > # Install IRkernel for Jupyter
+                > install.packages("IRkernel")
+                > IRkernel::installspec()
+                > ```
+                >
+                > Then launch Jupyter and select the R kernel to run the notebook.
+                >
+                > ```bash
+                > git clone https://github.com/srhimal149/srhimal149-Quantitative-Risk-Analytics-R.git
+                > jupyter notebook
+                > ```
+                >
+                > ## Author
+                >
+                > **Md Saifur Rahman Himal**
+                > MSc FinTech (Distinction Candidate) | Quantitative Finance & Risk Analytics
+                > [LinkedIn](https://www.linkedin.com/in/md-saifur-rahman-himal-70a0941ba) | [GitHub](https://github.com/srhimal149)
+                >
+                > ## License
+                >
+                > MIT License
